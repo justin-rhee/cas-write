@@ -1,5 +1,7 @@
 # cas-write
 
+[![tests](https://github.com/justin-rhee/cas-write/actions/workflows/test.yml/badge.svg)](https://github.com/justin-rhee/cas-write/actions/workflows/test.yml)
+
 Compare-and-swap writes for a file that more than one process updates, so a
 second writer cannot silently erase the first.
 
