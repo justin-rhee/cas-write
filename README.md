@@ -2,17 +2,11 @@
 
 [![tests](https://github.com/justin-rhee/cas-write/actions/workflows/test.yml/badge.svg)](https://github.com/justin-rhee/cas-write/actions/workflows/test.yml)
 
-Compare-and-swap writes for a file that more than one process updates, so a
-second writer cannot silently erase the first.
+Two agent sessions and a scheduled job, all appending to one index file. One night a whole session's entries vanished.
 
-## Why I built it
+Each writer had read the file, built its update, and saved. Whichever landed last erased the rest, nothing errored, and I only noticed days later when I went looking for something I was sure I'd written.
 
-Two processes that read the same file, each build new content from what they
-read, and each save will both succeed, and whichever finishes last is the only
-one whose changes survive. Mine did this to a shared index file that two agent
-sessions and a scheduled job all appended to. A whole session's entries were
-gone. Nothing errored, nothing logged, and I only found out days later when I
-went looking for something I was sure I had written.
+cas-write is compare-and-swap for any file more than one process updates, so a second writer can't silently erase the first.
 
 ## How it works
 
@@ -137,8 +131,8 @@ The permission check came first. The original version created its temp file with
 0644 file that other processes read quietly became readable only by me. The fix
 copies the target's mode onto the temp file before the swap.
 
-The concurrency check is the one that matters. Six threads, thirty appends, and
-the first run kept six of them. The hash check was real but the window it left
+The concurrency check ran six threads and thirty appends, and the first run
+kept six of them. The hash check was real but the window it left
 open was not small: between "the hash still matches" and "the rename landed"
 sits a write and an fsync, which is long enough that other writers usually land
 inside it. Adding the lock around the compare and the swap fixed it. I then
