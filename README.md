@@ -146,4 +146,4 @@ problem: [SECURITY.md](SECURITY.md).
 
 Design decisions and what changed while building it: [docs/ADR.md](docs/ADR.md).
 
-One of a handful of small tools I pulled out of the agent setup I run day to day. I use them all myself, so I notice quickly when one breaks. Open an issue anytime, whether something's wrong or you just want to ask about it. I'll read it and fix what I can. More of them on my [GitHub profile](https://github.com/justin-rhee).
+This little tool is one of a handful I pulled out of my own day-to-day agent setup. I use them all myself, so when something breaks I usually notice fast. But if you spot something weird, or just want to ask how it works, open an issue. I read every one. More tools on my [GitHub profile](https://github.com/justin-rhee).
