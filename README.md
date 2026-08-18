@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/justin-rhee/cas-write/actions/workflows/test.yml/badge.svg)](https://github.com/justin-rhee/cas-write/actions/workflows/test.yml)
 
-Two agent sessions and a scheduled job, all appending to one index file. One night a whole session's entries vanished.
+Two agent sessions and a scheduled job, all appending to one index file. One night a whole session's entries vanished
 
 Each writer had read the file, built its update, and saved. Whichever landed last erased the rest, nothing errored, and I only noticed days later when I went looking for something I was sure I'd written.
 
@@ -147,7 +147,6 @@ problem: [SECURITY.md](SECURITY.md).
 Design decisions and what changed while building it: [docs/ADR.md](docs/ADR.md).
 
 One of a set of small tools I've pulled out of a bigger system I run, where
-agents write the code and plain scripts decide when it's actually done. They all
-share one rule: the machine suggests, a person decides, and nothing quietly goes
-wrong behind your back. More of them on my
+agents write the code and plain scripts decide when it's actually done. I keep the final call for myself, and I'd rather a check be
+annoying than silent. More of them on my
 [GitHub profile](https://github.com/justin-rhee).
