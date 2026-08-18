@@ -12,34 +12,74 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Show interpreter versions
+      # Node is set up unconditionally: the version banner below is part of the
+      # platform claim, and a package with no JS still prints it harmlessly.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Install dev dependencies when the package pins any
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then npm ci
+          elif [ -f package.json ] && grep -q '"devDependencies"' package.json; then npm install
+          else echo "no dev dependencies to install"; fi
+
+      - name: Show interpreter versions (a platform claim must match what ran)
         shell: bash
         run: |
           echo "os: ${{ matrix.os }}"
+          bash --version | head -1
           /bin/bash --version | head -1 || true
           python3 --version || true
+          node --version || true
 
-      - name: Run tests
+      # EVERY suite shape the packages actually use gets a runner here. The first
+      # version knew only test*.sh and test*.py, so six TypeScript and .mjs
+      # packages went red with "no test files matched" while their suites passed
+      # locally. A workflow that cannot run a package's tests is not a weaker
+      # signal than a red build, it IS the red build, which is why the zero-ran
+      # guard at the bottom stays exactly as it is.
+      - name: Run offline test suites
         shell: bash
         run: |
           set -uo pipefail
-          fail=0
           ran=0
-          for f in tests/test*.sh; do
-            [ -e "$f" ] || continue
-            echo "--- running $f ---"
-            bash "$f" || fail=1
+          fail=0
+
+          # A repo-supplied runner wins: it knows its own invocation.
+          if [ -f tests/run.sh ]; then
+            echo "== bash tests/run.sh"
+            bash tests/run.sh || fail=1
             ran=$((ran + 1))
-          done
-          for f in tests/test*.py; do
-            [ -e "$f" ] || continue
-            echo "--- running $f ---"
-            python3 "$f" || fail=1
+          elif [ -f tests/run_tests.sh ]; then
+            echo "== bash tests/run_tests.sh"
+            bash tests/run_tests.sh || fail=1
             ran=$((ran + 1))
-          done
+          else
+            for f in tests/test*.sh; do
+              [ -e "$f" ] || continue
+              echo "== bash $f"; bash "$f" || fail=1; ran=$((ran + 1))
+            done
+            for f in tests/test*.py; do
+              [ -e "$f" ] || continue
+              echo "== python3 $f"; python3 "$f" || fail=1; ran=$((ran + 1))
+            done
+            for f in tests/*.mjs; do
+              [ -e "$f" ] || continue
+              echo "== node $f"; node "$f" || fail=1; ran=$((ran + 1))
+            done
+            # node --test runs the whole glob in one process, so it counts once.
+            if ls tests/*.test.ts >/dev/null 2>&1; then
+              echo "== node --test tests/*.test.ts"
+              node --test tests/*.test.ts || fail=1
+              ran=$((ran + 1))
+            fi
+          fi
+
           if [ "$ran" -eq 0 ]; then
-            echo "FAIL: no test files matched tests/test*.sh or tests/test*.py"
+            echo "FAIL: no suite matched tests/run.sh, tests/run_tests.sh, tests/test*.sh, tests/test*.py, tests/*.mjs or tests/*.test.ts" >&2
             exit 1
           fi
-          [ "$fail" -eq 0 ] || { echo "FAIL: a test suite failed"; exit 1; }
-          echo "ran $ran test file(s); all passed"
+          [ "$fail" -eq 0 ] || { echo "FAIL: a test suite exited non-zero" >&2; exit 1; }
+          echo "ran $ran suite invocation(s); all passed"
