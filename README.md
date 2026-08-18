@@ -146,7 +146,4 @@ problem: [SECURITY.md](SECURITY.md).
 
 Design decisions and what changed while building it: [docs/ADR.md](docs/ADR.md).
 
-One of a set of small tools I've pulled out of a bigger system I run, where
-agents write the code and plain scripts decide when it's actually done. I keep the final call for myself, and I'd rather a check be
-annoying than silent. More of them on my
-[GitHub profile](https://github.com/justin-rhee).
+One of a handful of small tools I pulled out of the agent setup I run day to day. I use them all myself, so I notice quickly when one breaks. Open an issue anytime, whether something's wrong or you just want to ask about it. I'll read it and fix what I can. More of them on my [GitHub profile](https://github.com/justin-rhee).
