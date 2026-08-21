@@ -95,28 +95,20 @@ is the part that survives contact with code you do not control.
 
 ## What it won't do
 
-It only fully protects writers that go through it. An editor, an agent's own
-file-write tool, or a script in another language will not take the lock. Those
-get caught by the hash check most of the time, and can still win the narrow race
-between the check and the rename.
-
-It will not save you from a transform that is unsafe to re-run. If your function
-appends a line the first time and something different the second time, a retry
-produces a wrong answer with no error at all. That is the easiest way to be
-fooled by this, and the reason the docstring says so twice.
-
-It is not crash durability. The rename is atomic, but the directory entry is not
-fsynced, so a machine that loses power at the wrong moment can still leave you
-with the old content.
-
-It is POSIX only. The lock uses `fcntl.flock`, so the module does not import on
-Windows.
-
-It leaves a `<target>.lock` file next to your file, on purpose. Deleting it would
-race with the next writer.
-
-`cas_update` will not create a file. It raises `FileNotFoundError`. Use
-`cas_write` with `expected_sha=None` when you mean to create one.
+- fully protect writers that don't go through it, since an editor, an agent's own
+  file-write tool, or a script in another language won't take the lock, so those rely
+  on the hash check and can still win the narrow race between the check and the rename
+- save you from a transform that's unsafe to re-run, since a function appending one
+  thing the first time and something else the second produces a wrong answer on retry
+  with no error at all, which is the easiest way to be fooled by this
+- give you crash durability, because the rename is atomic but the directory entry
+  isn't fsynced, so a machine losing power at the wrong moment can still leave you the
+  old content
+- run on Windows, since the lock uses `fcntl.flock` and the module won't import there
+- clean up the `<target>.lock` file beside yours, which stays on purpose because
+  deleting it would race the next writer
+- create a file from `cas_update`, which raises `FileNotFoundError`, so use `cas_write`
+  with `expected_sha=None` when you mean to create one
 
 ## How I tested it
 
@@ -146,4 +138,4 @@ problem: [SECURITY.md](SECURITY.md).
 
 Design decisions and what changed while building it: [docs/ADR.md](docs/ADR.md).
 
-This little tool is one of a handful I pulled out of my own day-to-day agent setup. I use them all myself, so when something breaks I usually notice fast. But if you spot something weird, or just want to ask how it works, open an issue. I read every one. More tools on my [GitHub profile](https://github.com/justin-rhee).
+This little tool is one of a handful I pulled out of my own day-to-day agent setup. I use them all myself, so when something breaks I usually notice fast. But if you run into any issues, or anything that looks off, open an issue. I read every one. More tools on my [GitHub profile](https://github.com/justin-rhee).
