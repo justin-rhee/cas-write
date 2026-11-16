@@ -1,0 +1,39 @@
+name: publish gate
+
+# The same checks a push from the Mac runs, so a pull request merged on GitHub
+# can't skip them. Required for merging into main.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          path: ${{ github.event.repository.name }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: justin-rhee/publish-template
+          token: ${{ secrets.GATE_READ_TOKEN }}
+          path: publish-template
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Run the publish gate
+        env:
+          LEAK_PATTERNS: ${{ secrets.LEAK_PATTERNS }}
+          GATE_REPO: ${{ github.repository }}
+          GATE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GATE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash publish-template/bin/ci-gate.sh "${{ github.event.repository.name }}"
